@@ -6,6 +6,7 @@
 #define SMASHPP_FILTER_HPP
 
 #include <memory>
+
 #include "par.hpp"
 
 namespace smashpp {
@@ -34,7 +35,6 @@ class Filter {
 
   void set_sample_step_size(std::unique_ptr<Param>&);
   void set_filt_size(std::unique_ptr<Param>&);
-  void show_info(std::unique_ptr<Param>&) const;
   void make_window(uint32_t);
   void make_hamming(uint32_t);
   void make_hann(uint32_t);
@@ -44,9 +44,7 @@ class Filter {
   void make_sine(uint32_t);
   void make_nuttall(uint32_t);
   void smooth_seg_win1(std::vector<PosRow>&, std::unique_ptr<Param>&, uint8_t);
-  template <bool SaveFilter>
   void smooth_seg_rect(std::vector<PosRow>&, std::unique_ptr<Param>&, uint8_t);
-  template <bool SaveFilter>
   void smooth_seg_non_rect(std::vector<PosRow>&, std::unique_ptr<Param>&,
                            uint8_t);
   // bool is_mergable (const Position&, const Position&) const;

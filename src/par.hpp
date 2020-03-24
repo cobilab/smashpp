@@ -37,7 +37,7 @@ static constexpr uint8_t D{5};              // Depth of CML sketch
 static const std::string LBL_BAK{"_bk"};    // Label  - backup files
 static const std::string POS_WATERMARK{"##SMASH++"};  // Hdr of pos file
 static constexpr uint32_t FILE_READ_BUF{8 * 1024};  // 8K
-static constexpr uint32_t FILE_WRITE_BUF{64 * 1024};
+static constexpr uint32_t FILE_WRITE_BUF{32 * 1024};
 static const std::string IMAGE{"map.svg"};
 
 // Visualization
