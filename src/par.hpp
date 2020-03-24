@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #ifndef SMASHPP_PAR_HPP
 #define SMASHPP_PAR_HPP
@@ -36,7 +36,8 @@ static constexpr uint64_t W{2 << 29ull};    // Width of CML sketch
 static constexpr uint8_t D{5};              // Depth of CML sketch
 static const std::string LBL_BAK{"_bk"};    // Label  - backup files
 static const std::string POS_WATERMARK{"##SMASH++"};  // Hdr of pos file
-static constexpr int FILE_BUF{8 * 1024};  // 8K
+static constexpr uint32_t FILE_READ_BUF{8 * 1024};  // 8K
+static constexpr uint32_t FILE_WRITE_BUF{64 * 1024};
 static const std::string IMAGE{"map.svg"};
 
 // Visualization
@@ -84,14 +85,13 @@ class Param {
   bool compress;
   bool filter;
   bool segment;
-  uint32_t ID;
+  uint8_t ID;
   bool noRedun;
   bool deep;
   bool asym_region;
   std::vector<MMPar> refMs, tarMs;
   std::string message;
   std::string param_list;
-
   struct TarGuard {
     int16_t beg;
     int16_t end;

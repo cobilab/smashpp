@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #include "output.hpp"
 using namespace smashpp;
@@ -128,8 +128,7 @@ inline void PositionFile::make_write_pos_pair(const std::vector<PosRow>& left,
   if (!out_aux.empty()) write_pos_file_impl(out_aux, asym_region);
 }
 
-void PositionFile::write_pos_file(const std::vector<PosRow>& pos_out,
-                                  bool asym_region) {
+void PositionFile::write(const std::vector<PosRow>& pos_out, bool asym_region) {
   std::vector<PosRow> left, right1, right3;
   for (const auto& row : pos_out) {
     if (row.round == 2) left.push_back(PosRow(row));

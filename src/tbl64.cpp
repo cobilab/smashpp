@@ -1,24 +1,30 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
+
+#include "tbl64.hpp"
 
 #include <algorithm>
 #include <fstream>
-#include "tbl64.hpp"
+
 #include "exception.hpp"
 using namespace smashpp;
 
 Table64::Table64(uint8_t k_) : k(k_) {
-  try {  // 4<<2k = 4*2^2k = 4*4^k = 4^(k+1)
-    tbl.resize(4ull << (k << 1u));
-  } catch (std::bad_alloc& b) {
-    error("failed memory allocation.");
+  if (k_ != 0) {
+    try {  // 4<<2k = 4*2^2k = 4*4^k = 4^(k+1)
+      tbl.resize(4ull << (k << 1u));
+    } catch (std::bad_alloc& b) {
+      error("failed memory allocation.");
+    }
   }
 }
 
-void Table64::update(uint32_t ctx) { ++tbl[ctx]; }
+void Table64::update(Table64::ctx_t ctx) { ++tbl[ctx]; }
 
-uint64_t Table64::query(uint32_t ctx) const { return tbl[ctx]; }
+auto Table64::query(Table64::ctx_t ctx) const -> Table64::val_t {
+  return tbl[ctx];
+}
 
 void Table64::dump(std::ofstream& ofs) const {
   ofs.write((const char*)&tbl[0], tbl.size());

@@ -1,9 +1,11 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 #include "filter.hpp"
+
 #include <cmath>
 #include <numeric>
+
 #include "file.hpp"
 #include "naming.hpp"
 #include "number.hpp"
@@ -695,11 +697,25 @@ inline void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   check_file(profileName);
   std::ifstream prfF(profileName);
   std::ofstream filF(filterName);
+
+  // todo
+  std::vector<prc_t> filtered_values;
+  filtered_values.reserve(FILE_WRITE_BUF);
+  std::ostream_iterator<prc_t> output_iterator(filF, "\n");
+
   auto seg = std::make_shared<Segment>();
   seg->thresh = par->thresh;
   seg->minSize = par->segSize;
   seg->round = round;
   seg->sample_step = par->sampleStep;
+
+  // seg->totalSize = file_lines(profileName);
+  seg->totalSize = file_size(par->tar);  // todo
+
+  const auto jump_lines = [&]() {
+    for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
+  };
+
   {
     uint8_t maxCtx = 0;
     for (const auto& e : par->refMs)
@@ -711,11 +727,6 @@ inline void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
       seg->set_guards(maxCtx, par->tar_guard->beg, par->tar_guard->end);
   }
 
-  seg->totalSize = file_lines(profileName);  // todo
-  const auto jump_lines = [&]() {
-    for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
-  };
-
   std::vector<float> seq;
   seq.reserve(filt_size);
   auto entropy{0.f};
@@ -724,7 +735,10 @@ inline void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   // First value
   {
     auto i = (filt_size >> 1u) + 1;
-    for (; i-- && (prfF >> entropy); jump_lines()) seq.push_back(entropy);
+    // for (; i-- && (prfF >> entropy); jump_lines()) seq.push_back(entropy);
+    // todo
+    for (; i-- && (prfF >> entropy);) seq.push_back(entropy);
+
     auto num_ent_exist = (filt_size >> 1u) + 1 - i;
     seq.insert(std::begin(seq), num_ent_exist - 1, 2.0);
   }
@@ -738,20 +752,39 @@ inline void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
 
   auto sum = std::inner_product(std::begin(seq), std::end(seq), winBeg, 0.f);
   auto filtered = sum / sum_weights;
-  if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+  // if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+
+  // todo
+  if (SaveFilter) filtered_values.push_back(filtered);
+
   seg->partition(pos_out, filtered);
   if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
 
   // The rest
   uint32_t idx{0};
   auto seqBeg = std::begin(seq);
-  for (; prfF >> entropy; jump_lines()) {
+  // todo
+  // for (; prfF >> entropy; jump_lines()) {
+  for (; prfF >> entropy;) {
     seq[idx] = entropy;
     idx = (idx + 1) % filt_size;
     sum = (std::inner_product(winBeg, winEnd - idx, seqBeg + idx, 0.f) +
            std::inner_product(winEnd - idx, winEnd, seqBeg, 0.f));
     filtered = sum / sum_weights;
-    if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+    // if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+
+    // todo
+    if (SaveFilter) {
+      filtered_values.push_back(filtered);
+
+      if (filtered_values.size() >= FILE_WRITE_BUF) {
+        std::copy(std::begin(filtered_values), std::end(filtered_values),
+                  output_iterator);
+        filtered_values.clear();
+        filtered_values.reserve(FILE_WRITE_BUF);
+      }
+    }
+
     ++seg->pos;
     seg->partition(pos_out, filtered);
     if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
@@ -766,13 +799,30 @@ inline void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
     sum = (std::inner_product(winBeg, winEnd - idx, seqBeg + idx, 0.f) +
            std::inner_product(winEnd - idx, winEnd, seqBeg, 0.f));
     filtered = sum / sum_weights;
-    if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+    // if (SaveFilter) filF << precision(PREC_FIL, filtered) << '\n';
+
+    // todo
+    if (SaveFilter) {
+      filtered_values.push_back(filtered);
+
+      if (filtered_values.size() >= FILE_WRITE_BUF) {
+        std::copy(std::begin(filtered_values), std::end(filtered_values),
+                  output_iterator);
+        filtered_values.clear();
+        filtered_values.reserve(FILE_WRITE_BUF);
+      }
+    }
+
     ++seg->pos;
     seg->partition(pos_out, filtered);
     if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
   }
   seg->finalize_partition(pos_out);
   if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
+
+  // todo
+  std::copy(std::begin(filtered_values), std::end(filtered_values),
+            output_iterator);
 
   filF.close();
   if (!SaveFilter) remove(filterName.c_str());

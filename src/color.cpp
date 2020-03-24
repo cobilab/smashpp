@@ -1,20 +1,21 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
+
+#include "color.hpp"
 
 #include <algorithm>
-#include "color.hpp"
-#include "string.hpp"
+
 #include "exception.hpp"
+#include "string.hpp"
 
 namespace smashpp {
 // Global functions
 inline bool is_hex(std::string color) {
   if (color.front() != '#' || color.size() != 7) return false;
-
-  for (auto ch : color.substr(1))
+  for (auto ch : color.substr(1)) {
     if (!std::isxdigit(ch)) return false;
-
+  }
   return true;
 }
 
@@ -22,9 +23,7 @@ inline std::string to_hex(const RGB& color) {
   return string_format("#%X%X%X", color.r, color.g, color.b);
 }
 
-inline std::string to_hex(const HSV& color) {
-  return to_hex(to_rgb(color));
-}
+inline std::string to_hex(const HSV& color) { return to_hex(to_rgb(color)); }
 
 inline RGB to_rgb(std::string color) {
   if (is_hex(color)) {
@@ -32,20 +31,21 @@ inline RGB to_rgb(std::string color) {
                std::stoi(color.substr(3, 2), 0, 16 /*base*/),
                std::stoi(color.substr(5, 2), 0, 16 /*base*/));
   } else {
-    if (color == "black")
+    if (color == "black") {
       return RGB(0, 0, 0);
-    else if (color == "white")
+    } else if (color == "white") {
       return RGB(255, 255, 255);
-    else if (color == "grey")
+    } else if (color == "grey") {
       return RGB(128, 128, 128);
-    else if (color == "red")
+    } else if (color == "red") {
       return RGB(255, 0, 0);
-    else if (color == "green")
+    } else if (color == "green") {
       return RGB(0, 255, 0);
-    else if (color == "blue")
+    } else if (color == "blue") {
       return RGB(0, 0, 255);
-    else
+    } else {
       error("color \"" + color + "\"undefined");
+    }
   }
   return RGB();
 }

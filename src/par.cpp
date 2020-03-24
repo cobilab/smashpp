@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #include "par.hpp"
 #include <algorithm>
@@ -206,10 +206,10 @@ void Param::parse(int argc, char**& argv) {
   }
 
   // Mandatory args
-  const bool has_t{has(std::begin(vArgs), std::end(vArgs), "-t")};
-  const bool has_tar{has(std::begin(vArgs), std::end(vArgs), "--tar")};
-  const bool has_r{has(std::begin(vArgs), std::end(vArgs), "-r")};
-  const bool has_ref{has(std::begin(vArgs), std::end(vArgs), "--ref")};
+  const bool has_t{contains(std::begin(vArgs), std::end(vArgs), "-t")};
+  const bool has_tar{contains(std::begin(vArgs), std::end(vArgs), "--tar")};
+  const bool has_r{contains(std::begin(vArgs), std::end(vArgs), "-r")};
+  const bool has_ref{contains(std::begin(vArgs), std::end(vArgs), "--ref")};
   if (!has_t && !has_tar)
     error("target file not specified. Use \"-t <fileName>\".");
   else if (!has_r && !has_ref)

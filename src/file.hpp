@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #ifndef SMASHPP_FILE_HPP
 #define SMASHPP_FILE_HPP
@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+
 #include "exception.hpp"
 #include "par.hpp"
 
@@ -129,8 +130,8 @@ inline static void to_seq(std::string inName, std::string outName,
 
   if (type == FileType::fasta) {
     bool isHeader{false};  // MUST be positioned before the following loop
-    for (std::vector<char> buffer(FILE_BUF, 0); in_file.peek() != EOF;) {
-      in_file.read(buffer.data(), FILE_BUF);
+    for (std::vector<char> buffer(FILE_READ_BUF, 0); in_file.peek() != EOF;) {
+      in_file.read(buffer.data(), FILE_READ_BUF);
       std::string out;
       for (auto it = std::begin(buffer);
            it != std::begin(buffer) + in_file.gcount(); ++it) {
@@ -152,8 +153,8 @@ inline static void to_seq(std::string inName, std::string outName,
   } else if (type == FileType::fastq) {
     uint8_t line{0};    // MUST be positioned before the following loop
     bool isDNA{false};  // MUST be positioned before the following loop
-    for (std::vector<char> buffer(FILE_BUF, 0); in_file.peek() != EOF;) {
-      in_file.read(buffer.data(), FILE_BUF);
+    for (std::vector<char> buffer(FILE_READ_BUF, 0); in_file.peek() != EOF;) {
+      in_file.read(buffer.data(), FILE_READ_BUF);
       std::string out;
       for (auto it = std::begin(buffer);
            it != std::begin(buffer) + in_file.gcount(); ++it) {
@@ -195,6 +196,11 @@ inline static void to_seq(std::string inName, std::string outName,
 
   in_file.close();
   out_file.close();
+}
+
+inline void activate_fast_io() {
+  std::ios_base::sync_with_stdio(false);
+  std::cin.tie(NULL);
 }
 }  // namespace smashpp
 

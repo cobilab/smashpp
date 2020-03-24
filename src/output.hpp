@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #ifndef SMASHPP_OUTPUT_HPP
 #define SMASHPP_OUTPUT_HPP
@@ -37,7 +37,7 @@ class PositionFile {
       : name("out.pos"),
         watermark(POS_WATERMARK),
         info(std::make_unique<Info>()) {}
-  void write_pos_file(const std::vector<PosRow>&, bool);
+  void write(const std::vector<PosRow>&, bool);
 
  private:
   void make_write_pos_pair(const std::vector<PosRow>&,

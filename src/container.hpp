@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #ifndef SMASHPP_CONTAINER_HPP
 #define SMASHPP_CONTAINER_HPP
@@ -22,7 +22,7 @@ inline void split(InIter first, InIter last, char delim, Vec& vOut) {
 }
 
 template <typename Iter, typename Element>
-inline bool has(Iter first, Iter last, Element elem) {
+inline bool contains(Iter first, Iter last, Element elem) {
   return std::find(first, last, elem) != last;
 }
 

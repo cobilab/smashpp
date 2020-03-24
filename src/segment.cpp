@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #include "segment.hpp"
 using namespace smashpp;
@@ -16,8 +16,10 @@ void Segment::partition(std::vector<PosRow>& pos_out, float filtered) {
     if (!begun) {
       begun = true;
       begPos = pos;
+      // begPos = pos * sample_step;  // todo
     }
     endPos = pos;
+    // endPos = pos * sample_step;  // todo
     sumEnt += filtered;
     ++numEnt;
   }
@@ -25,6 +27,9 @@ void Segment::partition(std::vector<PosRow>& pos_out, float filtered) {
 
 void Segment::finalize_partition(std::vector<PosRow>& pos_out) {
   if (endPos != begPos) {
+      //todo
+      // std::cerr << "\nbeg=" << begPos << " end=" << endPos << '\n';
+
     begPos *= sample_step;
     endPos *= sample_step;
     // totalSize *= sample_step;//todo
@@ -32,14 +37,12 @@ void Segment::finalize_partition(std::vector<PosRow>& pos_out) {
     // if (endPos != begPos && endPos - begPos >= minSize) {
     if ((round == 1 && endPos - begPos >= minSize) || round != 1) {
       ++nSegs;
-
       const auto beg = (static_cast<int64_t>(begPos - beg_guard) < 0)
                            ? 0
                            : begPos - beg_guard;
       const auto end =
           (endPos + end_guard > totalSize) ? totalSize : endPos + end_guard;
       const auto ent = sumEnt / numEnt;
-
       pos_out.push_back(PosRow(beg, end, ent));
     }
   }

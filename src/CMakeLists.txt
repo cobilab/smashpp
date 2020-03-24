@@ -13,7 +13,10 @@ endif()
 # set(CMAKE_C_COMPILER C:\\mingw\\mingw64\\bin\\x86_64-w64-mingw32-gcc.exe)
 # set(CMAKE_CXX_COMPILER C:\\MinGW\\bin\\g++.exe)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -O3 -Wall -ffast-math -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fbranch-target-load-optimize -fforce-addr -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -O3 -Wall -ffast-math -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fbranch-target-load-optimize -fforce-addr -ftracer -march=native")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -O3 -Wall -ffast-math -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fbranch-target-load-optimize -fforce-addr -ftracer -march=native -pg")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall -march=native -pg")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall -march=native -pg -g")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fopenmp -O3 -Wall -ffast-math -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fbranch-target-load-optimize -fforce-addr -march=native")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -Wall -O0 -g")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -O3 -pg") # mem prof

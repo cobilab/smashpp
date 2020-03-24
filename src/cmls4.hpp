@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #ifndef SMASHPP_CMLS4_HPP
 #define SMASHPP_CMLS4_HPP
@@ -15,7 +15,12 @@ class CMLS4 {  // Count-min-log sketch, 4 bits per counter
   CMLS4() : w(W), d(D), uhashShift(0), tot(0) {}
   CMLS4(uint64_t, uint8_t);
   void update(uint64_t);                   // Update sketch
+  void update(uint64_t, uint8_t) {}        // Update table
   auto query(uint64_t) const -> uint16_t;  // Query count of ctx
+
+  auto query(uint64_t, uint8_t) const -> uint16_t {}
+  auto query_counters(uint64_t) -> std::vector<uint16_t> {}  // todo
+
   void dump(std::ofstream&) const;
   void load(std::ifstream&) const;
 

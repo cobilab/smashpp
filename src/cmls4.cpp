@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 #include <random>
 #include <fstream>
@@ -36,13 +36,14 @@ void CMLS4::set_a_b() {
 
 void CMLS4::update(uint64_t ctx) {
   const auto c{min_log_ctr(ctx)};
-  if (!(tot++ & POW2minus1[c]))     // Increase decision.  x % 2^n = x & (2^n-1)
+  if (!(tot++ & POW2minus1[c])) {   // Increase decision.  x % 2^n = x & (2^n-1)
   //    for (uint8_t i=0; i!=d; ++i) {
     for (uint8_t i = d; i--;) {
       const auto idx = hash(i, ctx);
       if (read_cell(idx) == c)      // Conservative update
         sk[idx >> 1u] = INC_CTR[((idx & 1ull) << 8u) + sk[idx >> 1u]];
     }
+  }
 }
 
 uint8_t CMLS4::min_log_ctr(uint64_t ctx) const {

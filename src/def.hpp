@@ -1,6 +1,6 @@
 // Smash++
 // Morteza Hosseini    seyedmorteza@ua.pt
-// Copyright (C) 2018-2019, IEETA, University of Aveiro, Portugal.
+// Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
 //#define DEBUG 1
 
@@ -114,6 +114,27 @@ struct PosRow {
   }
 };
 
+// Function
+static auto base_code(char c) -> uint8_t {
+  switch (c) {
+    case 'C':
+    case 'c':
+      return 1;
+      break;
+    case 'G':
+    case 'g':
+      return 2;
+      break;
+    case 'T':
+    case 't':
+      return 3;
+      break;
+      // default:
+      //   break;
+  }
+  return 0;
+}
+
 // Metaprogram
 // Power a^n
 constexpr uint64_t sqr(uint64_t a) { return a * a; }
@@ -139,19 +160,22 @@ static constexpr uint64_t POW2[44] {
   0x01000000000, 0x02000000000, 0x04000000000, 0x08000000000,
   0x10000000000, 0x20000000000, 0x40000000000, 0x80000000000
 };
-static constexpr uint64_t POW2minus1[44]{
-  0x0000000000, 0x00000000001, 0x00000000003, 0x00000000007,
-  0x000000000F, 0x0000000001F, 0x0000000003F, 0x0000000007F,
-  0x00000000FF, 0x000000001FF, 0x000000003FF, 0x000000007FF,
-  0x0000000FFF, 0x00000001FFF, 0x00000003FFF, 0x00000007FFF,
-  0x000000FFFF, 0x0000001FFFF, 0x0000003FFFF, 0x0000007FFFF,
-  0x00000FFFFF, 0x000001FFFFF, 0x000003FFFFF, 0x000007FFFFF,
-  0x0000FFFFFF, 0x00001FFFFFF, 0x00003FFFFFF, 0x00007FFFFFF,
-  0x000FFFFFFF, 0x0001FFFFFFF, 0x0003FFFFFFF, 0x0007FFFFFFF,
-  0x00FFFFFFFF, 0x001FFFFFFFF, 0x003FFFFFFFF, 0x007FFFFFFFF,
-  0x0FFFFFFFFF, 0x01FFFFFFFFF, 0x03FFFFFFFFF, 0x07FFFFFFFFF,
-  0xFFFFFFFFFF, 0x1FFFFFFFFFF, 0x3FFFFFFFFFF, 0x7FFFFFFFFFF
-};
+// static constexpr uint64_t POW2minus1[44]{
+//   0x0000000000, 0x00000000001, 0x00000000003, 0x00000000007,
+//   0x000000000F, 0x0000000001F, 0x0000000003F, 0x0000000007F,
+//   0x00000000FF, 0x000000001FF, 0x000000003FF, 0x000000007FF,
+//   0x0000000FFF, 0x00000001FFF, 0x00000003FFF, 0x00000007FFF,
+//   0x000000FFFF, 0x0000001FFFF, 0x0000003FFFF, 0x0000007FFFF,
+//   0x00000FFFFF, 0x000001FFFFF, 0x000003FFFFF, 0x000007FFFFF,
+//   0x0000FFFFFF, 0x00001FFFFFF, 0x00003FFFFFF, 0x00007FFFFFF,
+//   0x000FFFFFFF, 0x0001FFFFFFF, 0x0003FFFFFFF, 0x0007FFFFFFF,
+//   0x00FFFFFFFF, 0x001FFFFFFFF, 0x003FFFFFFFF, 0x007FFFFFFFF,
+//   0x0FFFFFFFFF, 0x01FFFFFFFFF, 0x03FFFFFFFFF, 0x07FFFFFFFFF,
+//   0xFFFFFFFFFF, 0x1FFFFFFFFFF, 0x3FFFFFFFFFF, 0x7FFFFFFFFFF
+// };
+static constexpr uint32_t POW2minus1[17]{ //todo
+    0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F, 0x003F, 0x007F, 0x00FF,
+    0x01FF, 0x03FF, 0x07FF, 0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF};
 // static constexpr uint64_t POW2[36] {
 //            1,          2,           4,           8,
 //           16,         32,          64,         128,
