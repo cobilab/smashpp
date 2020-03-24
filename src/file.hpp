@@ -198,7 +198,7 @@ inline static void to_seq(std::string inName, std::string outName,
   out_file.close();
 }
 
-inline void activate_fast_io() {
+inline void enable_fast_io() {
   std::ios_base::sync_with_stdio(false);
   std::cin.tie(NULL);
 }
