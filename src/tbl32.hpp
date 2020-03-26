@@ -11,25 +11,25 @@
 
 namespace smashpp {
 class Table32 {
+  using ctx_t = uint32_t;
+  using val_t = uint32_t;
+
  private:
-  std::vector<uint32_t> tbl;  // Table of 32 bit counters
-  uint8_t k;                  // Ctx size
-  uint32_t nRenorm;           // Renormalization times
-  uint64_t tot;               // Total # elements so far
+  std::vector<val_t> tbl;  // Table of 32 bit counters
+  uint8_t k;               // Ctx size
+  uint32_t nRenorm;        // Renormalization times
+  uint64_t tot;            // Total # elements so far
 
  public:
   Table32() : k(0), nRenorm(0), tot(0) {}
   explicit Table32(uint8_t);
-  void update(uint32_t);                   // Update table
-  void update(uint32_t, uint8_t) {}        // Update table
-  auto query(uint32_t) const -> uint32_t;  // Query count of ctx
+  void update(ctx_t);                // Update table
+  auto query(ctx_t) const -> val_t;  // Query count of ctx
+  auto query_counters(ctx_t) -> std::vector<val_t>;
 
-  auto query(uint32_t, uint8_t) const -> uint32_t {}
-  auto query_counters(uint32_t) -> std::vector<uint32_t> {}  // todo
-
+#ifdef DEBUG
   void dump(std::ofstream&) const;
   void load(std::ifstream&) const;
-#ifdef DEBUG
   auto get_total() const -> uint64_t;  // Total count of all items in the table
   auto count_empty() const -> uint64_t;  // Number of empty cells in the table
   auto max_tbl_val() const -> uint32_t;

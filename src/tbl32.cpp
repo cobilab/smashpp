@@ -2,34 +2,46 @@
 // Morteza Hosseini    seyedmorteza@ua.pt
 // Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
+#include "tbl32.hpp"
+
 #include <algorithm>
 #include <fstream>
-#include "tbl32.hpp"
+
 #include "exception.hpp"
 using namespace smashpp;
 
 Table32::Table32(uint8_t k_) : k(k_), nRenorm(0), tot(0) {
-  try {  // 4<<2k = 4*2^2k = 4*4^k = 4^(k+1)
-    tbl.resize(4ull << (k << 1u));
+  try {
+    tbl.resize(1ull << (2 * (k + 1)));
   } catch (std::bad_alloc& b) {
     error("failed memory allocation.");
   }
 }
 
-void Table32::update(uint32_t ctx) {
-  if (tbl[ctx] == 0xFFFFFFFF)  // 2^32-1
+void Table32::update(Table32::ctx_t context_and_base) {
+  if (tbl[context_and_base] == 0xFFFFFFFF)  // 2^32-1
     renormalize();
-  ++tbl[ctx];
+  ++tbl[context_and_base];
   ++tot;
 }
 
-inline void Table32::renormalize() {
+void Table32::renormalize() {
   for (auto c : tbl) c >>= 1;
   ++nRenorm;
 }
 
-uint32_t Table32::query(uint32_t ctx) const { return tbl[ctx]; }
+auto Table32::query(Table32::ctx_t ctx) const -> Table32::val_t {
+  return tbl[ctx];
+}
 
+auto Table32::query_counters(Table32::ctx_t context_and_base)
+    -> std::vector<Table32::val_t> {
+  auto row_address = &tbl[context_and_base];
+  return {*row_address, *(row_address + 1), *(row_address + 2),
+          *(row_address + 3)};
+}
+
+#ifdef DEBUG
 void Table32::dump(std::ofstream& ofs) const {
   ofs.write((const char*)&tbl[0], tbl.size());
   //  ofs.close();
@@ -39,7 +51,6 @@ void Table32::load(std::ifstream& ifs) const {
   ifs.read((char*)&tbl[0], tbl.size());
 }
 
-#ifdef DEBUG
 uint64_t Table32::get_total() const { return tot; }
 
 uint64_t Table32::count_empty() const {

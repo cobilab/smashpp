@@ -2,9 +2,11 @@
 // Morteza Hosseini    seyedmorteza@ua.pt
 // Copyright (C) 2018-2020, IEETA, University of Aveiro, Portugal.
 
-#include <random>
-#include <fstream>
 #include "cmls4.hpp"
+
+#include <fstream>
+#include <random>
+
 #include "exception.hpp"
 using namespace smashpp;
 
@@ -34,23 +36,23 @@ void CMLS4::set_a_b() {
   }                                 // Parenthesis in ab[(i<<1)+1] are MANDATORY
 }
 
-void CMLS4::update(uint64_t ctx) {
-  const auto c{min_log_ctr(ctx)};
-  if (!(tot++ & POW2minus1[c])) {   // Increase decision.  x % 2^n = x & (2^n-1)
-  //    for (uint8_t i=0; i!=d; ++i) {
+void CMLS4::update(CMLS4::ctx_t context_and_base) {
+  const auto c{min_log_ctr(context_and_base)};
+  if (!(tot++ & POW2minus1[c])) {  // Increase decision.  x % 2^n = x & (2^n-1)
+                                   //    for (uint8_t i=0; i!=d; ++i) {
     for (uint8_t i = d; i--;) {
-      const auto idx = hash(i, ctx);
-      if (read_cell(idx) == c)      // Conservative update
+      const auto idx = hash(i, context_and_base);
+      if (read_cell(idx) == c)  // Conservative update
         sk[idx >> 1u] = INC_CTR[((idx & 1ull) << 8u) + sk[idx >> 1u]];
     }
   }
 }
 
-uint8_t CMLS4::min_log_ctr(uint64_t ctx) const {
+auto CMLS4::min_log_ctr(CMLS4::ctx_t context_and_base) const -> uint8_t {
   uint8_t min{15};  // 15 = max val in CTR[]
   //  for (uint8_t i=0; i!=d && min!=0; ++i) {
   for (uint8_t i = d; min != 0 && i--;) {
-    const auto lg = read_cell(hash(i, ctx));
+    const auto lg = read_cell(hash(i, context_and_base));
     if (lg < min) min = lg;
   }
   return min;
@@ -62,14 +64,22 @@ uint8_t CMLS4::read_cell(uint64_t idx) const {
 }
 
 // Strong 2-universal
-uint64_t CMLS4::hash(uint8_t i, uint64_t ctx) const {
+auto CMLS4::hash(uint8_t i, uint64_t ctx) const -> uint64_t {
   return i * w + ((ab[i << 1u] * ctx + ab[(i << 1u) + 1]) >> uhashShift);
 }
 
-uint16_t CMLS4::query(uint64_t ctx) const {
-  return FREQ2[min_log_ctr(ctx)];  // Base 2. otherwise (b^c-1)/(b-1)
+auto CMLS4::query(CMLS4::ctx_t context_and_base) const -> CMLS4::val_t {
+  // Base 2. otherwise (b^c-1)/(b-1)
+  return FREQ2[min_log_ctr(context_and_base)];
 }
 
+auto CMLS4::query_counters(CMLS4::ctx_t context_and_base)
+    -> std::vector<CMLS4::val_t> {
+  return {query(context_and_base), query(context_and_base | 1ull),
+          query(context_and_base | 2ull), query(context_and_base | 3ull)};
+}
+
+#ifdef DEBUG
 void CMLS4::dump(std::ofstream& ofs) const {
   ofs.write((const char*)&sk[0], sk.size());
   //  ofs.close();
@@ -79,7 +89,6 @@ void CMLS4::load(std::ifstream& ifs) const {
   ifs.read((char*)&sk[0], sk.size());
 }
 
-#ifdef DEBUG
 uint64_t CMLS4::get_total() const { return tot; }
 
 uint64_t CMLS4::count_empty() const {

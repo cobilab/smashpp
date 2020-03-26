@@ -18,20 +18,17 @@ class Table64 {
 
  private:
   std::vector<val_t> tbl;  // Table of 64 bit counters
-  uint8_t k;                  // Ctx size
+  uint8_t k;               // Ctx size
 
  public:
-  Table64(uint8_t=0);
-  void update(ctx_t);                   // Update table
-  void update(ctx_t, uint8_t){}                // Update table
+  Table64(uint8_t = 0);
+  void update(ctx_t);                // Update table
   auto query(ctx_t) const -> val_t;  // Query count of ctx
+  auto query_counters(ctx_t) -> std::vector<val_t>;
 
-auto query(ctx_t,uint8_t) const -> val_t{}
-auto query_counters(ctx_t) -> std::vector<val_t>{}//todo
-
+#ifdef DEBUG
   void dump(std::ofstream&) const;
   void load(std::ifstream&) const;
-#ifdef DEBUG
   auto count_empty() const -> uint64_t;  // Number of empty cells in the table
   auto max_tbl_val() const -> uint64_t;
   void print() const;

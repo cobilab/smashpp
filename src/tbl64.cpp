@@ -12,20 +12,30 @@ using namespace smashpp;
 
 Table64::Table64(uint8_t k_) : k(k_) {
   if (k_ != 0) {
-    try {  // 4<<2k = 4*2^2k = 4*4^k = 4^(k+1)
-      tbl.resize(4ull << (k << 1u));
+    try {
+      tbl.resize(1ull << (2 * (k + 1)));
     } catch (std::bad_alloc& b) {
       error("failed memory allocation.");
     }
   }
 }
 
-void Table64::update(Table64::ctx_t ctx) { ++tbl[ctx]; }
+void Table64::update(Table64::ctx_t context_and_base) {
+  ++tbl[context_and_base];
+}
 
 auto Table64::query(Table64::ctx_t ctx) const -> Table64::val_t {
   return tbl[ctx];
 }
 
+auto Table64::query_counters(Table64::ctx_t context_and_base)
+    -> std::vector<Table64::val_t> {
+  auto row_address = &tbl[context_and_base];
+  return {*row_address, *(row_address + 1), *(row_address + 2),
+          *(row_address + 3)};
+}
+
+#ifdef DEBUG
 void Table64::dump(std::ofstream& ofs) const {
   ofs.write((const char*)&tbl[0], tbl.size());
   //  ofs.close();
@@ -35,7 +45,6 @@ void Table64::load(std::ifstream& ifs) const {
   ifs.read((char*)&tbl[0], tbl.size());
 }
 
-#ifdef DEBUG
 uint64_t Table64::count_empty() const {
   return static_cast<uint64_t>(std::count(std::begin(tbl), std::end(tbl), 0));
 }

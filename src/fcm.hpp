@@ -45,17 +45,12 @@ class FCM {  // Finite-context models
   uint8_t tTMsSize;
 
   void set_cont(std::vector<MMPar>&);
-  // void show_info(
-  //     std::unique_ptr<Param>&) const;  // Show inputs info on the screen
   void alloc_model();                  // Allocate memory to models
 
-  void store_1(std::unique_ptr<Param>&);  // Build models one thread
-  void store_n(std::unique_ptr<Param>&);  // Build models multiple threads
-  template <typename ContainerIter>
-  void store_impl(uint8_t, std::string, uint8_t,
-                  ContainerIter);  // Fill data struct
-  // template <typename Mask, typename ContainerIter>
-  // void store_impl(std::string, Mask, ContainerIter);  // Fill data struct
+  void store_1(std::unique_ptr<Param>&);  // Build models - one thread
+  void store_n(std::unique_ptr<Param>&);  // Build models - multiple threads
+  template <typename ContextT, typename ContainerIter>
+  void store_impl(uint8_t, std::string, ContextT, ContainerIter);
 
   template <typename ContainerIter>
   void compress_1(std::unique_ptr<Param>&,
@@ -63,10 +58,10 @@ class FCM {  // Finite-context models
   void compress_n(std::unique_ptr<Param>&);  // Compress with n Models
   template <typename ContainerIter>
   void compress_n_parent(std::unique_ptr<CompressPar>&, ContainerIter,
-                         uint8_t) const;
+                         uint8_t,bool) const;
   template <typename ContainerIter>
   void compress_n_child(std::unique_ptr<CompressPar>&, ContainerIter,
-                        uint8_t) const;
+                        uint8_t,bool) const;
 
   void self_compress_alloc();
   template <typename ContainerIter>
@@ -105,6 +100,8 @@ class FCM {  // Finite-context models
   auto prob(FreqIter, ProbParIter) const -> prc_t;
   template <typename WIter, typename PIter>
   auto prob(WIter, PIter, PIter) const -> prc_t;
+  template <typename FreqIter, typename ProbParIter>
+  auto entropy(FreqIter, ProbParIter) const -> prc_t;
   auto entropy(prc_t) const -> prc_t;
   template <typename WIter, typename PIter>
   auto entropy(WIter, PIter, PIter) const -> prc_t;

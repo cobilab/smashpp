@@ -24,11 +24,9 @@ class LogTable8 {
  public:
   LogTable8() : k(0), tot(0) {}
   explicit LogTable8(uint8_t);
-  void update(ctx_t);                                // Update table
-  void update(ctx_t, uint8_t);                       // Update table
-  auto query(ctx_t) const -> val_t;                  // Query count of ctx
-  auto query(ctx_t, uint8_t) const -> val_t;         // Query count of ctx
-  auto query_counters(ctx_t) -> std::vector<val_t>;  // todo
+  void update(ctx_t);                // Update table
+  auto query(ctx_t) const -> val_t;  // Query count of ctx
+  auto query_counters(ctx_t) -> std::vector<val_t>;
 
 #ifdef DEBUG
   void dump(std::ofstream&) const;
@@ -37,14 +35,10 @@ class LogTable8 {
   auto count_empty() const -> uint64_t;  // Number of empty cells in the table
   auto max_tbl_val() const -> uint32_t;
   void print() const;
-  ~LogTable8() {
-    std::cerr << "count_empty=" << count_empty() << "\ntotal=" << get_total()
-              << "\nmax_tbl_val=" << max_tbl_val() << '\n';
-  }
 #endif
 
  private:
-  bool must_update(uint8_t) const;
+  auto must_update(uint8_t) const -> bool;
 };
 }  // namespace smashpp
 

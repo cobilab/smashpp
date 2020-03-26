@@ -11,25 +11,8 @@ namespace smashpp {
 static constexpr uint32_t G{64};  // Machine word size-univers hash fn
 
 class CMLS4 {  // Count-min-log sketch, 4 bits per counter
- public:
-  CMLS4() : w(W), d(D), uhashShift(0), tot(0) {}
-  CMLS4(uint64_t, uint8_t);
-  void update(uint64_t);                   // Update sketch
-  void update(uint64_t, uint8_t) {}        // Update table
-  auto query(uint64_t) const -> uint16_t;  // Query count of ctx
-
-  auto query(uint64_t, uint8_t) const -> uint16_t {}
-  auto query_counters(uint64_t) -> std::vector<uint16_t> {}  // todo
-
-  void dump(std::ofstream&) const;
-  void load(std::ifstream&) const;
-
-#ifdef DEBUG
-  auto get_total() const -> uint64_t;    // Total no. of all items in the sketch
-  auto count_empty() const -> uint64_t;  // Number of empty cells in the sketch
-  auto max_sk_val() const -> uint8_t;
-  void print() const;
-#endif
+  using ctx_t = uint64_t;
+  using val_t = uint16_t;
 
  private:
   uint64_t w;                // Width of sketch
@@ -39,6 +22,23 @@ class CMLS4 {  // Count-min-log sketch, 4 bits per counter
   std::vector<uint8_t> sk;   // Sketch
   uint64_t tot;              // Total # elements, so far
 
+ public:
+  CMLS4() : w(W), d(D), uhashShift(0), tot(0) {}
+  CMLS4(uint64_t, uint8_t);
+  void update(ctx_t);                // Update sketch
+  auto query(ctx_t) const -> val_t;  // Query count of ctx
+  auto query_counters(ctx_t) -> std::vector<val_t>;
+
+#ifdef DEBUG
+  void dump(std::ofstream&) const;
+  void load(std::ifstream&) const;
+  auto get_total() const -> uint64_t;    // Total no. of all items in the sketch
+  auto count_empty() const -> uint64_t;  // Number of empty cells in the sketch
+  auto max_sk_val() const -> uint8_t;
+  void print() const;
+#endif
+
+ private:
   auto read_cell(uint64_t) const -> uint8_t;  // Read each cell of the sketch
   void set_a_b();  // Set coeffs a, b of hash fns (a*x+b) %P %w
   auto hash(uint8_t, uint64_t) const
