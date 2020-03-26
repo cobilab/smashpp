@@ -350,14 +350,13 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
   entropies.reserve(FILE_WRITE_BUF);
   std::ostream_iterator<prc_t> output_iterator(prf_file, "\n");
   uint64_t sample_step_index = 0;
-  auto compress_n_impl = [&](auto& cp, auto cont, uint8_t& n,
-                             bool sample_taken) {
-    compress_n_parent(cp, cont, n, sample_taken);
+  auto compress_n_impl = [&](auto& cp, auto cont, uint8_t& n) {
+    compress_n_parent(cp, cont, n);
     if (cp->mm.child) {
       ++cp->ppIt;
       ++cp->ctxIt;
       ++cp->ctxIrIt;
-      compress_n_child(cp, cont, ++n, sample_taken);
+      compress_n_child(cp, cont, ++n);
     }
   };
 
@@ -369,7 +368,6 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
       if (c == '\n') continue;
 
       bool sample_taken = (sample_step_index % par->sampleStep == 0);
-      // ++symsNo;//todo
       cp->c = c;
       // cp->nSym = NUM[static_cast<uint8_t>(c)];
       cp->nSym = base_code(c);
@@ -388,16 +386,16 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
         cp->mm = mm;
         switch (mm.cont) {
           case Container::log_table_8:
-            compress_n_impl(cp, lgtbl8_it++, n, sample_taken);
+            compress_n_impl(cp, lgtbl8_it++, n);
             break;
           case Container::sketch_8:
-            compress_n_impl(cp, cmls4_it++, n, sample_taken);
+            compress_n_impl(cp, cmls4_it++, n);
             break;
           case Container::table_32:
-            compress_n_impl(cp, tbl32_it++, n, sample_taken);
+            compress_n_impl(cp, tbl32_it++, n);
             break;
           case Container::table_64:
-            compress_n_impl(cp, tbl64_it++, n, sample_taken);
+            compress_n_impl(cp, tbl64_it++, n);
             break;
         }
         ++n;
@@ -406,13 +404,6 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
         ++cp->ctxIrIt;
       }
 
-      // // auto const probability =
-      // //     prob(std::begin(cp->w), std::begin(cp->probs),
-      // //     std::end(cp->probs));
-      // // const auto entr = entropy(probability);
-      // const auto entr = entropy(std::begin(cp->w), std::begin(cp->probs),
-      //                           std::end(cp->probs));
-      // prf_file << precision(PREC_PRF, entr) << '\n';
       if (sample_taken) {
         const auto entr = entropy(std::begin(cp->w), std::begin(cp->probs),
                                   std::end(cp->probs));
@@ -423,7 +414,6 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
 
       normalize(std::begin(cp->w), std::begin(cp->wNext), std::end(cp->wNext));
       // update_weights(begin(cp->w), begin(cp->probs), end(cp->probs));
-      // sumEnt += entr;
 
       ++sample_step_index;
       if (par->verbose) show_progress(symsNo, totalSize, par->message);
@@ -444,26 +434,23 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
 
 template <typename ContainerIter>
 void FCM::compress_n_parent(std::unique_ptr<CompressPar>& cp,
-                            ContainerIter cont, uint8_t n,
-                            bool sample_taken) const {
+                            ContainerIter cont, uint8_t n) const {
   prc_t prb;
 
   // if (cp->mm.ir == 0) {
   // if (c == 'N') cp->c = TAR_ALT_N; // todo not necessary
   cp->ppIt->config_ir0(cp->c, *cp->ctxIt);
-  // if (sample_taken) {
-    if (cp->c != 'N') {
-      // using FreqType = decltype((*cont)->query(0));
-      // auto f = freqs_ir0<FreqType>(cont, cp->ppIt->l);
-      // prb = prob(std::begin(f), cp->ppIt);
-      auto counters = (*cont)->query_counters(cp->ppIt->l);
-      prb = prob(std::begin(counters), cp->ppIt);
-    } else {
-      prb = 1.0 / std::pow(2.0, entropyN);
-    }
-    cp->probs.push_back(prb);
-    cp->wNext[n] = weight_next(cp->w[n], cp->mm.gamma, prb);
-  // }
+  if (cp->c != 'N') {
+    // using FreqType = decltype((*cont)->query(0));
+    // auto f = freqs_ir0<FreqType>(cont, cp->ppIt->l);
+    // prb = prob(std::begin(f), cp->ppIt);
+    auto counters = (*cont)->query_counters(cp->ppIt->l);
+    prb = prob(std::begin(counters), cp->ppIt);
+  } else {
+    prb = 1.0 / std::pow(2.0, entropyN);
+  }
+  cp->probs.push_back(prb);
+  cp->wNext[n] = weight_next(cp->w[n], cp->mm.gamma, prb);
   *cp->ctxIt = update_ctx_ir0(cp->ppIt);
   // } else if (cp->mm.ir == 1) {
   //   if (cp->c != 'N') {
@@ -500,24 +487,22 @@ void FCM::compress_n_parent(std::unique_ptr<CompressPar>& cp,
 
 template <typename ContainerIter>
 void FCM::compress_n_child(std::unique_ptr<CompressPar>& cp, ContainerIter cont,
-                           uint8_t n, bool sample_taken) const {
+                           uint8_t n) const {
   prc_t prb;
 
   // if (cp->mm.child->ir == 0) {
   cp->ppIt->config_ir0(cp->c, *cp->ctxIt);  // l
-  // if (sample_taken) {
-    // using FreqType = decltype((*cont)->query(0));
-    // auto f = freqs_ir0<FreqType>(cont, cp->ppIt->l);
-    // prb = (cp->c != 'N') ? prob(std::begin(f), cp->ppIt)
-    //                      : 1.0 / std::pow(2.0, entropyN);
-    auto counters = (*cont)->query_counters(cp->ppIt->l);
-    prb = (cp->c != 'N') ? prob(std::begin(counters), cp->ppIt)
-                         : 1.0 / std::pow(2.0, entropyN);
-    cp->probs.push_back(prb);
-    correct_stmm(cp, std::begin(counters));
-    // correct_stmm(cp, std::begin(f));
-    cp->wNext[n] = weight_next(cp->w[n], cp->mm.child->gamma, prb);
-  // }
+  // using FreqType = decltype((*cont)->query(0));
+  // auto f = freqs_ir0<FreqType>(cont, cp->ppIt->l);
+  // prb = (cp->c != 'N') ? prob(std::begin(f), cp->ppIt)
+  //                      : 1.0 / std::pow(2.0, entropyN);
+  auto counters = (*cont)->query_counters(cp->ppIt->l);
+  prb = (cp->c != 'N') ? prob(std::begin(counters), cp->ppIt)
+                       : 1.0 / std::pow(2.0, entropyN);
+  cp->probs.push_back(prb);
+  correct_stmm(cp, std::begin(counters));
+  // correct_stmm(cp, std::begin(f));
+  cp->wNext[n] = weight_next(cp->w[n], cp->mm.child->gamma, prb);
   *cp->ctxIt = update_ctx_ir0(cp->ppIt);
   // } else if (cp->mm.child->ir == 1) {
   //   cp->ppIt->config_ir1(cp->c, *cp->ctxIrIt);  // r
@@ -559,11 +544,11 @@ void FCM::self_compress(std::unique_ptr<Param>& par, uint64_t ID,
 
   if (tMs.size() == 1 && tTMsSize == 0)  // 1 MM
     switch (tMs[0].cont) {
-      case Container::sketch_8:
-        self_compress_1(par, std::begin(cmls4), ID);
-        break;
       case Container::log_table_8:
         self_compress_1(par, std::begin(lgtbl8), ID);
+        break;
+      case Container::sketch_8:
+        self_compress_1(par, std::begin(cmls4), ID);
         break;
       case Container::table_32:
         self_compress_1(par, std::begin(tbl32), ID);
@@ -592,11 +577,11 @@ inline void FCM::self_compress_alloc() {
 
   for (const auto& m : tMs) {
     switch (m.cont) {
-      case Container::sketch_8:
-        cmls4.push_back(std::make_unique<CMLS4>(m.w, m.d));
-        break;
       case Container::log_table_8:
         lgtbl8.push_back(std::make_unique<LogTable8>(m.k));
+        break;
+      case Container::sketch_8:
+        cmls4.push_back(std::make_unique<CMLS4>(m.w, m.d));
         break;
       case Container::table_32:
         tbl32.push_back(std::make_unique<Table32>(m.k));
@@ -618,7 +603,7 @@ inline void FCM::self_compress_1(std::unique_ptr<Param>& par,
   std::ifstream seqF(par->seq);
   ProbPar pp{tMs[0].alpha, ctxIr /* mask: 1<<2k-1=4^k-1 */,
              static_cast<uint8_t>(tMs[0].k << 1u)};
-  const auto totalSize = file_size(par->seq);
+  const auto totalSize = file_size(par->seq);//todo
   prc_t entr;
 
   for (std::vector<char> buffer(FILE_READ_BUF, 0); seqF.peek() != EOF;) {
@@ -642,7 +627,6 @@ inline void FCM::self_compress_1(std::unique_ptr<Param>& par,
         sumEnt += entr;
         (*cont)->update(pp.l | pp.numSym);
         ctx = update_ctx_ir0(&pp);
-        // update_ctx_ir0(ctx, &pp);
       } else if (tMs[0].ir == 1) {
         pp.config_ir1(c, ctxIr);
         if (c != 'N') {
@@ -656,7 +640,6 @@ inline void FCM::self_compress_1(std::unique_ptr<Param>& par,
         sumEnt += entr;
         (*cont)->update((pp.revNumSym << pp.shl) | pp.r);
         ctxIr = update_ctx_ir1(&pp);
-        // update_ctx_ir1(ctxIr, &pp);
       } else if (tMs[0].ir == 2) {
         pp.config_ir2(c, ctx, ctxIr);
         if (c != 'N') {
@@ -669,7 +652,6 @@ inline void FCM::self_compress_1(std::unique_ptr<Param>& par,
         // cout << precision(PREC_PRF, entr) << '\n';
         sumEnt += entr;
         (*cont)->update(pp.l | pp.numSym);
-        // update_ctx_ir2(ctx, ctxIr, &pp);
         auto const updated = update_ctx_ir2(&pp);
         ctx = updated.first;
         ctxIr = updated.second;
@@ -720,7 +702,8 @@ inline void FCM::self_compress_n(std::unique_ptr<Param>& par, uint64_t ID) {
 
   // for (std::vector<char> buffer(FILE_READ_BUF, 0); seqF.peek() != EOF;) {
   //   seqF.read(buffer.data(), FILE_READ_BUF);
-  //   for (auto it = std::begin(buffer); it != std::begin(buffer) + seqF.gcount();
+  //   for (auto it = std::begin(buffer); it != std::begin(buffer) +
+  //   seqF.gcount();
   //        ++it) {
   //     const auto c = *it;
   //     if (c == '\n') continue;
@@ -763,12 +746,14 @@ inline void FCM::self_compress_n(std::unique_ptr<Param>& par, uint64_t ID) {
   //     }
 
   //     auto const probability =
-  //         prob(std::begin(cp->w), std::begin(cp->probs), std::end(cp->probs));
+  //         prob(std::begin(cp->w), std::begin(cp->probs),
+  //         std::end(cp->probs));
   //     auto const ent = entropy(probability);
   //     // const auto ent = entropy(std::begin(cp->w), std::begin(cp->probs),
   //     //                          std::end(cp->probs));
   //     // cout << precision(PREC_PRF, ent) << '\n';
-  //     normalize(std::begin(cp->w), std::begin(cp->wNext), std::end(cp->wNext));
+  //     normalize(std::begin(cp->w), std::begin(cp->wNext),
+  //     std::end(cp->wNext));
   //     ////        update_weights(begin(cp->w), begin(cp->probs),
   //     /// end(cp->probs));
   //     sumEnt += ent;

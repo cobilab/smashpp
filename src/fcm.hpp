@@ -45,7 +45,7 @@ class FCM {  // Finite-context models
   uint8_t tTMsSize;
 
   void set_cont(std::vector<MMPar>&);
-  void alloc_model();                  // Allocate memory to models
+  void alloc_model();  // Allocate memory to models
 
   void store_1(std::unique_ptr<Param>&);  // Build models - one thread
   void store_n(std::unique_ptr<Param>&);  // Build models - multiple threads
@@ -58,10 +58,10 @@ class FCM {  // Finite-context models
   void compress_n(std::unique_ptr<Param>&);  // Compress with n Models
   template <typename ContainerIter>
   void compress_n_parent(std::unique_ptr<CompressPar>&, ContainerIter,
-                         uint8_t,bool) const;
+                         uint8_t) const;
   template <typename ContainerIter>
   void compress_n_child(std::unique_ptr<CompressPar>&, ContainerIter,
-                        uint8_t,bool) const;
+                        uint8_t) const;
 
   void self_compress_alloc();
   template <typename ContainerIter>
