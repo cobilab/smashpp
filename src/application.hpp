@@ -28,12 +28,11 @@ class application {
  private:
   std::unique_ptr<Param> par;
   std::unique_ptr<VizParam> vizpar;
-  uint8_t round;
   std::vector<PosRow> pos_out;
   std::vector<uint64_t> num_seg_round;
 
  public:
-  application() : round(1) { num_seg_round.resize(3); }
+  application() { num_seg_round.resize(3); }
   void exe(int, char**);
 
  private:
@@ -41,8 +40,9 @@ class application {
   void process_round1();
   void process_round2(std::string const&, std::string const&, uint64_t&);
   void process_round3(std::string const&, std::string const&, uint64_t&);
-  auto process_round_impl(uint64_t&) -> uint64_t;
-  void compress_ref_free(std::unique_ptr<FCM>&, std::unique_ptr<Filter>&);
+  auto process_round_impl(uint64_t&, uint8_t) -> uint64_t;
+  void compress_ref_free(std::unique_ptr<FCM>&, std::unique_ptr<Filter>&,
+                         uint8_t);
   void write_pos_file() const;
 
   void prepare_data() const;
@@ -145,7 +145,6 @@ void application::process_round1() {
   uint64_t current_pos_row = 0;
   // #pragma omp parallel for ordered schedule(static, 1) //todo
   for (par->ID = 0; par->ID <= 1; ++par->ID) {
-    round = 1;
     if (par->verbose && par->showInfo) {
       info{}.show(par);
       par->showInfo = false;
@@ -157,7 +156,7 @@ void application::process_round1() {
       std::cerr << bold(
           "====[ INVERTED MODE ]=================================\n");
     }
-    num_seg_round[0] = process_round_impl(current_pos_row);
+    num_seg_round[0] = process_round_impl(current_pos_row, 1);
     process_round2(ref_round1, tar_round1, current_pos_row);
     par->ref = ref_round1;
     par->tar = tar_round1;
@@ -166,7 +165,8 @@ void application::process_round1() {
   }
 }
 
-auto application::process_round_impl(uint64_t& current_pos_row) -> uint64_t {
+auto application::process_round_impl(uint64_t& current_pos_row, uint8_t round)
+    -> uint64_t {
   par->refName = file_name(par->ref);
   par->tarName = file_name(par->tar);
   auto models = std::make_unique<FCM>(par);
@@ -190,7 +190,7 @@ auto application::process_round_impl(uint64_t& current_pos_row) -> uint64_t {
   }
   filter->extract_seg(pos_out, round, par->ID, par->ref);
 
-  compress_ref_free(models, filter);
+  compress_ref_free(models, filter, round);
 
   current_pos_row += filter->nSegs;
   return filter->nSegs;
@@ -208,7 +208,8 @@ void application::make_ir_consistent(std::unique_ptr<FCM>& models) const {
 }
 
 void application::compress_ref_free(std::unique_ptr<FCM>& models,
-                                    std::unique_ptr<Filter>& filter) {
+                                    std::unique_ptr<Filter>& filter,
+                                    uint8_t round) {
   if (par->noRedun) return;
 
   if (par->verbose) {
@@ -251,12 +252,11 @@ void application::process_round2(std::string const& ref, std::string const& tar,
   std::string tar_round2 = par->tar = par->ref;
 #pragma omp parallel for ordered schedule(static, 1)
   for (uint64_t i = 0; i < num_seg_round[0]; ++i) {
-    round = 2;
 #pragma omp ordered
     if (!par->verbose)
       std::cerr << "\r" << par->message << "segment " << i + 1 << " ... ";
     std::string ref_round2 = par->ref = name_seg_round1 + std::to_string(i);
-    num_seg_round[1] = process_round_impl(current_pos_row);
+    num_seg_round[1] = process_round_impl(current_pos_row, 2);
 #pragma omp ordered
     if (par->verbose) std::cerr << '\n';
     process_round3(ref_round2, tar_round2, current_pos_row);
@@ -276,9 +276,8 @@ void application::process_round3(std::string const& ref, std::string const& tar,
     par->tar = ref;
 #pragma omp parallel for ordered schedule(static, 1)
     for (uint64_t j = 0; j < num_seg_round[1]; ++j) {
-      round = 3;
       par->ref = name_seg_round2 + std::to_string(j);
-      num_seg_round[2] = process_round_impl(current_pos_row);
+      num_seg_round[2] = process_round_impl(current_pos_row, 3);
 #pragma omp ordered
       if (par->verbose) std::cerr << "\n";
       remove_temp_seg(par, num_seg_round[2]);

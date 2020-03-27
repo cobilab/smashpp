@@ -70,6 +70,7 @@ class FCM {  // Finite-context models
   template <typename ContainerIter>
   void self_compress_n_parent(std::unique_ptr<CompressPar>&, ContainerIter,
                               uint8_t, uint64_t&) const;
+                              
   template <typename FreqType, typename ContainerIter>
   auto freqs_ir0(ContainerIter cont, uint64_t l) const -> std::vector<FreqType>;
   template <typename FreqType, typename ContainerIter>
