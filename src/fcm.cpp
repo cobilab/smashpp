@@ -245,7 +245,10 @@ inline void FCM::compress_1(std::unique_ptr<Param>& par, ContainerIter cont) {
       gen_name(par->ID, par->ref, par->tar, Format::profile));
   std::vector<prc_t> entropies;
   entropies.reserve(FILE_WRITE_BUF);
-  std::ostream_iterator<prc_t> output_iterator(prf_file, "\n");
+  // std::ostream_iterator<prc_t> output_iterator(prf_file, "\n");
+  auto write_entropies = [&]() {
+    for (auto e : entropies) prf_file << precision(PREC_PRF, e) << '\n';
+  };
   uint64_t sample_step_index = 0;
 
   for (std::vector<char> buffer(FILE_READ_BUF, 0); tar_file.peek() != EOF;) {
@@ -264,14 +267,9 @@ inline void FCM::compress_1(std::unique_ptr<Param>& par, ContainerIter cont) {
         if (c != 'N') {
           // using FreqType = decltype((*cont)->query(0));
           // auto counters = freqs_ir0<FreqType>(cont, prob_par.l);
+          // entr = entropy(prob(std::begin(counters), &prob_par));
           auto counters = (*cont)->query_counters(prob_par.l);
           entr = entropy(std::begin(counters), &prob_par);
-          // auto const probability_rev =
-          //     std::accumulate(std::begin(counters), std::end(counters),
-          //                     prob_par.sAlpha) /
-          //     (counters[prob_par.numSym] + prob_par.alpha);
-          // entr = std::log2(probability_rev);
-          // entr = entropy(prob(std::begin(counters), &prob_par));
         } else {
           entr = entropyN;
         }
@@ -300,20 +298,22 @@ inline void FCM::compress_1(std::unique_ptr<Param>& par, ContainerIter cont) {
         sumEnt += entr;
       }
 
-      // ++symsNo;
-      // sumEnt += entr;
-
       ++sample_step_index;
       if (par->verbose) show_progress(symsNo, totalSize, par->message);
+
+      // prf_file << precision(PREC_PRF, entr) << '\n';
+
     }
 
     if (entropies.size() >= FILE_WRITE_BUF) {
-      std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+      // std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+      write_entropies();
       entropies.clear();
       entropies.reserve(FILE_WRITE_BUF);
     }
   }
-  std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+  write_entropies();
+  // std::copy(std::begin(entropies), std::end(entropies), output_iterator);
 
   tar_file.close();
   prf_file.close();
@@ -350,7 +350,11 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
       gen_name(par->ID, par->ref, par->tar, Format::profile));
   std::vector<prc_t> entropies;
   entropies.reserve(FILE_WRITE_BUF);
-  std::ostream_iterator<prc_t> output_iterator(prf_file, "\n");
+  // std::ostream_iterator<prc_t> output_iterator(prf_file, "\n");
+  auto write_entropies = [&]() {
+    for (auto e : entropies) prf_file << precision(PREC_PRF, e) << '\n';
+    // for (auto e : entropies) prf_file << e << '\n';
+  };
   uint64_t sample_step_index = 0;
   auto compress_n_impl = [&](auto& cp, auto cont, uint8_t& n) {
     compress_n_parent(cp, cont, n);
@@ -422,12 +426,14 @@ inline void FCM::compress_n(std::unique_ptr<Param>& par) {
     }
 
     if (entropies.size() >= FILE_WRITE_BUF) {
-      std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+      // std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+      write_entropies();
       entropies.clear();
       entropies.reserve(FILE_WRITE_BUF);
     }
   }
-  std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+  // std::copy(std::begin(entropies), std::end(entropies), output_iterator);
+  write_entropies();
 
   tar_file.close();
   prf_file.close();

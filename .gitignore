@@ -31,3 +31,4 @@ desktop.ini
 # experiment/dataset/**
 experiment/dataset/mammalia/**
 *.pos
+test_remove_it/**

@@ -428,7 +428,12 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   std::ofstream filF(filterName);
   std::vector<float> filtered_values;
   filtered_values.reserve(FILE_WRITE_BUF);
-  std::ostream_iterator<float> output_iterator(filF, "\n");
+  // std::ostream_iterator<float> output_iterator(filF, "\n");
+  //todo
+  auto write_filtered_values = [&]() {
+    for (auto e : filtered_values) filF << precision(PREC_FIL, e) << "\n";
+  };
+
   bool const save_filter = par->saveFilter || par->saveAll;
   auto seg = std::make_shared<Segment>();
   seg->thresh = par->thresh;
@@ -489,8 +494,9 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
     if (save_filter) {
       filtered_values.push_back(filtered);
       if (filtered_values.size() >= FILE_WRITE_BUF) {
-        std::copy(std::begin(filtered_values), std::end(filtered_values),
-                  output_iterator);
+        // std::copy(std::begin(filtered_values), std::end(filtered_values),
+        //           output_iterator);
+        write_filtered_values();
         filtered_values.clear();
         filtered_values.reserve(FILE_WRITE_BUF);
       }
@@ -513,8 +519,9 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
     if (save_filter) {
       filtered_values.push_back(filtered);
       if (filtered_values.size() >= FILE_WRITE_BUF) {
-        std::copy(std::begin(filtered_values), std::end(filtered_values),
-                  output_iterator);
+        // std::copy(std::begin(filtered_values), std::end(filtered_values),
+        //           output_iterator);
+        write_filtered_values();
         filtered_values.clear();
         filtered_values.reserve(FILE_WRITE_BUF);
       }
@@ -524,8 +531,9 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
     if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
   }
   seg->finalize_partition(pos_out);
-  std::copy(std::begin(filtered_values), std::end(filtered_values),
-            output_iterator);
+  // std::copy(std::begin(filtered_values), std::end(filtered_values),
+  //           output_iterator);
+  write_filtered_values();
   if (par->verbose) show_progress(++symsNo, seg->totalSize, par->message);
 
   filF.close();
