@@ -100,11 +100,11 @@ void Filter::smooth_seg_win1(std::vector<PosRow>& pos_out,
   seg->minSize = par->segSize;
   seg->round = round;
   seg->sample_step = par->sampleStep;
-  seg->totalSize = file_size(par->tar);
-  // seg->totalSize = file_lines(profile_name);
-  // const auto jump_lines = [&]() {
-  //   for (uint64_t i = par->sampleStep; i--;) ignore_this_line(profile);
-  // };
+  // seg->totalSize = file_size(par->tar);
+  seg->totalSize = file_lines(profile_name);
+  const auto jump_lines = [&]() {
+    for (uint64_t i = par->sampleStep; i--;) ignore_this_line(profile);
+  };
   uint8_t maxCtx = 0;
   for (const auto& e : par->refMs)
     if (e.k > maxCtx) maxCtx = e.k;
@@ -116,8 +116,8 @@ void Filter::smooth_seg_win1(std::vector<PosRow>& pos_out,
   uint64_t symsNo{0};
   bool save_filter = par->saveFilter || par->saveAll;
 
-  // for (; profile >> filtered; jump_lines()) {
-  for (; profile >> filtered;) {  // todo read in buffer
+  for (; profile >> filtered; jump_lines()) {
+  // for (; profile >> filtered;) {  // todo read in buffer
     if (save_filter) {
       // filter_file << precision(PREC_FIL, filtered) << '\n';
       filtered_values.push_back(filtered);
@@ -324,11 +324,11 @@ void Filter::smooth_seg_rect(std::vector<PosRow>& pos_out,
   seg->minSize = par->segSize;
   seg->round = round;
   seg->sample_step = par->sampleStep;
-  seg->totalSize = file_size(par->tar);
-  // seg->totalSize = file_lines(profileName);
-  // const auto jump_lines = [&]() {
-  //   for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
-  // };
+  // seg->totalSize = file_size(par->tar);
+  seg->totalSize = file_lines(profileName);
+  const auto jump_lines = [&]() {
+    for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
+  };
   {
     uint8_t maxCtx = 0;
     for (const auto& e : par->refMs)
@@ -348,8 +348,8 @@ void Filter::smooth_seg_rect(std::vector<PosRow>& pos_out,
   // First value
   {
     auto i = (filt_size >> 1u) + 1;
-    // for (; i-- && (prfF >> entropy); jump_lines()) {
-    for (; i-- && (prfF >> entropy);) {
+    for (; i-- && (prfF >> entropy); jump_lines()) {
+    // for (; i-- && (prfF >> entropy);) {
       seq.push_back(entropy);
       sum += entropy;
     }
@@ -367,8 +367,8 @@ void Filter::smooth_seg_rect(std::vector<PosRow>& pos_out,
 
   // The rest
   uint32_t idx{0};
-  // for (; prfF >> entropy; jump_lines()) {
-  for (; prfF >> entropy;) {
+  for (; prfF >> entropy; jump_lines()) {
+  // for (; prfF >> entropy;) {
     sum += entropy - seq[idx];
     filtered = sum / filt_size;
     // if (saveFilter) filF << precision(PREC_FIL, filtered) << '\n';
@@ -440,11 +440,11 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   seg->minSize = par->segSize;
   seg->round = round;
   seg->sample_step = par->sampleStep;
-  seg->totalSize = file_size(par->tar);
-  // seg->totalSize = file_lines(profileName);
-  // const auto jump_lines = [&]() {
-  //   for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
-  // };
+  // seg->totalSize = file_size(par->tar);
+  seg->totalSize = file_lines(profileName);
+  const auto jump_lines = [&]() {
+    for (uint64_t i = par->sampleStep; i--;) ignore_this_line(prfF);
+  };
   {
     uint8_t maxCtx = 0;
     for (const auto& e : par->refMs)
@@ -463,8 +463,8 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   // First value
   {
     auto i = (filt_size >> 1u) + 1;
-    for (; i-- && (prfF >> entropy);) seq.push_back(entropy);
-    // for (; i-- && (prfF >> entropy); jump_lines()) seq.push_back(entropy);
+    // for (; i-- && (prfF >> entropy);) seq.push_back(entropy);
+    for (; i-- && (prfF >> entropy); jump_lines()) seq.push_back(entropy);
     auto num_ent_exist = (filt_size >> 1u) + 1 - i;
     seq.insert(std::begin(seq), num_ent_exist - 1, 2.0);
   }
@@ -483,8 +483,8 @@ void Filter::smooth_seg_non_rect(std::vector<PosRow>& pos_out,
   // The rest
   uint32_t idx{0};
   auto seqBeg = std::begin(seq);
-  // for (; prfF >> entropy; jump_lines()) {
-  for (; prfF >> entropy;) {  // todo read in buffer
+  for (; prfF >> entropy; jump_lines()) {
+  // for (; prfF >> entropy;) {  // todo read in buffer
     seq[idx] = entropy;
     idx = (idx + 1) % filt_size;
     sum = (std::inner_product(winBeg, winEnd - idx, seqBeg + idx, 0.f) +
